@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: Comrade
+## Notes: Communist role-play emotes and messages that other players see
+## Version: 0.1.0
+## IconTexture: Interface\Icons\INV_Hammer_01
+## SavedVariables: ComradeDB
+
+Comrade.lua

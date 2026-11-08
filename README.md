@@ -1,0 +1,26 @@
+# Comrade
+
+A World of Warcraft Forever addon for communist role-play. Everything it sends is seen by other players.
+
+## Install
+
+Copy this folder into `World of Warcraft/_forever_/Interface/AddOns/Comrade` and restart the game.
+
+## What it sends
+
+| When | Where | Example |
+|---|---|---|
+| You level up | emote | *Calf Marx has seized more of the means of production.* |
+| A trade opens | whisper to your trade partner | Property is theft, comrade. But let's trade. |
+| You join a group | party or raid | Workers of Azeroth, unite! |
+| You gain a gold or more at once | emote | *Calf Marx accepts the gold on behalf of the people.* |
+| Every 15 to 30 minutes, out of combat | emote | *Calf Marx hums The Internationale.* |
+
+Each trigger fires at most once every five minutes.
+
+## Commands
+
+| Command | Does |
+|---|---|
+| `/comrade on` / `/comrade off` | start or pause everything |
+| `/comrade now` | send a random emote right away |
