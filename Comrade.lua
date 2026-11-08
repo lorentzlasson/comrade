@@ -81,23 +81,47 @@ sendButton:RegisterForClicks("AnyDown")
 sendButton:SetAttribute("type", "macro")
 sendButton:SetAttribute("useOnKeyDown", true)
 
+local indicator = CreateFrame("Frame", nil, UIParent)
+indicator:SetSize(28, 28)
+indicator:SetPoint("BOTTOMRIGHT", ChatFrame1, "TOPRIGHT", 0, 28)
+indicator:EnableMouse(true)
+indicator:Hide()
+
+local indicatorIcon = indicator:CreateTexture(nil, "ARTWORK")
+indicatorIcon:SetAllPoints()
+indicatorIcon:SetTexture("Interface\\Icons\\INV_Hammer_01")
+
+indicator:SetScript("OnEnter", function(self)
+  GameTooltip:SetOwner(self, "ANCHOR_TOP")
+  GameTooltip:SetText("Comrade emote waiting")
+  GameTooltip:AddLine(pendingEmote, 1, 1, 1, true)
+  GameTooltip:AddLine("Scroll the mouse wheel to send it.", 0.7, 0.7, 0.7, true)
+  GameTooltip:Show()
+end)
+indicator:SetScript("OnLeave", GameTooltip_Hide)
+
 local function armPending()
   if InCombatLockdown() then return end
   ClearOverrideBindings(sendButton)
   if not pendingEmote then return end
   sendButton:SetAttribute("macrotext", "/e " .. pendingEmote)
-  for _, key in ipairs({ GetBindingKey("MOVEFORWARD") }) do
+  for _, key in ipairs({ GetBindingKey("CAMERAZOOMIN") }) do
+    SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton")
+  end
+  for _, key in ipairs({ GetBindingKey("CAMERAZOOMOUT") }) do
     SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton")
   end
 end
 
 local function queueEmote(line)
   pendingEmote = line
+  indicator:Show()
   armPending()
 end
 
 sendButton:SetScript("PostClick", function()
   pendingEmote = nil
+  indicator:Hide()
   armPending()
 end)
 
