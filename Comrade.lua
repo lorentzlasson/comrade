@@ -76,26 +76,33 @@ local function pick(trigger)
   return list[math.random(#list)]
 end
 
-local sendButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
+local sendButton = CreateFrame("Button", "ComradeSendButton", UIParent, "SecureActionButtonTemplate,UIPanelButtonTemplate")
 sendButton:SetSize(220, 24)
 sendButton:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", 0, 28)
+sendButton:RegisterForClicks("AnyUp")
+sendButton:SetAttribute("type", "macro")
 sendButton:Hide()
 
-local function flushEmote()
-  if not pendingEmote then return end
-  local line = pendingEmote
-  pendingEmote = nil
-  sendButton:Hide()
-  C_ChatInfo.SendChatMessage(line, "EMOTE")
+local function showPending()
+  if InCombatLockdown() then return end
+  if pendingEmote then
+    sendButton:SetAttribute("macrotext", "/e " .. pendingEmote)
+    sendButton:SetText("Comrade: " .. pendingEmote)
+    sendButton:Show()
+  else
+    sendButton:Hide()
+  end
 end
 
 local function queueEmote(line)
   pendingEmote = line
-  sendButton:SetText("Comrade: " .. line)
-  sendButton:Show()
+  showPending()
 end
 
-sendButton:SetScript("OnClick", flushEmote)
+sendButton:SetScript("PostClick", function()
+  pendingEmote = nil
+  showPending()
+end)
 sendButton:SetScript("OnEnter", function(self)
   GameTooltip:SetOwner(self, "ANCHOR_TOP")
   GameTooltip:SetText("Click to emote")
@@ -264,6 +271,7 @@ local events = {
     lastMoney = GetMoney()
     scheduleRandom()
   end,
+  PLAYER_REGEN_ENABLED = showPending,
   PLAYER_LEVEL_UP = function()
     send("levelUp", "EMOTE")
   end,
@@ -304,7 +312,6 @@ local commands = {
   end,
   now = function()
     perform("random", "EMOTE")
-    flushEmote()
   end,
 }
 

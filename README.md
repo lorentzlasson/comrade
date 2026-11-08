@@ -24,4 +24,4 @@ Each trigger also plays an animated built-in emote: flex on level up, bow on tra
 |---|---|
 | `/comrade` | open the settings |
 | `/comrade on` / `/comrade off` | start or pause everything |
-| `/comrade now` | send a random emote right away |
+| `/comrade now` | play a random emote and put its line on the button |
