@@ -240,7 +240,7 @@ local function registerSettings()
   emoteDropdown("Comrade_MoneyEmote", "money", "SHY")
   slider("Comrade_MoneyThreshold", "moneyThreshold", "Money threshold", 100, 5, 500, 5, coins, "How much money counts as a lot")
   checkbox("Comrade_Random", ComradeDB.triggers, "random", "Random", true, "Emote now and then, out of combat")
-  emoteDropdown("Comrade_RandomEmote", "random", "ROAR")
+  emoteDropdown("Comrade_RandomEmote", "random", "")
   slider("Comrade_RandomMin", "randomMin", "Random at least every", 15, 1, 120, 1, minutes, "Shortest wait between random emotes")
   slider("Comrade_RandomMax", "randomMax", "Random at most every", 30, 1, 120, 1, minutes, "Longest wait between random emotes")
 
@@ -255,6 +255,10 @@ local events = {
     ComradeDB.triggers = ComradeDB.triggers or {}
     ComradeDB.lines = ComradeDB.lines or {}
     ComradeDB.emotes = ComradeDB.emotes or {}
+    if not ComradeDB.version then
+      if ComradeDB.emotes.random == "ROAR" then ComradeDB.emotes.random = "" end
+      ComradeDB.version = 1
+    end
     registerSettings()
   end,
   PLAYER_LOGIN = function()
