@@ -47,6 +47,24 @@ local editorTabs = {
   { trigger = "random", label = "Random", hint = emoteHint },
 }
 
+local emoteChoices = {
+  { token = "", label = "None" },
+  { token = "APPLAUD", label = "Applaud" },
+  { token = "BOW", label = "Bow" },
+  { token = "CHEER", label = "Cheer" },
+  { token = "DANCE", label = "Dance" },
+  { token = "FLEX", label = "Flex" },
+  { token = "KNEEL", label = "Kneel" },
+  { token = "LAUGH", label = "Laugh" },
+  { token = "POINT", label = "Point" },
+  { token = "ROAR", label = "Roar" },
+  { token = "RUDE", label = "Rude" },
+  { token = "SALUTE", label = "Salute" },
+  { token = "SHY", label = "Shy" },
+  { token = "TALK", label = "Talk" },
+  { token = "WAVE", label = "Wave" },
+}
+
 local function linesFor(trigger)
   return ComradeDB.lines[trigger] or defaultLines[trigger]
 end
@@ -57,14 +75,19 @@ local function pick(trigger)
   return list[math.random(#list)]
 end
 
+local function perform(trigger, chatType, target)
+  local emote = ComradeDB.emotes[trigger]
+  local line = pick(trigger)
+  if emote ~= "" then C_ChatInfo.PerformEmote(emote) end
+  if line then C_ChatInfo.SendChatMessage(line, chatType, nil, target) end
+end
+
 local function send(trigger, chatType, target)
   if not ComradeDB.enabled or not ComradeDB.triggers[trigger] then return end
   local now = GetTime()
   if lastFired[trigger] and now - lastFired[trigger] < ComradeDB.cooldown * 60 then return end
-  local line = pick(trigger)
-  if not line then return end
   lastFired[trigger] = now
-  C_ChatInfo.SendChatMessage(line, chatType, nil, target)
+  perform(trigger, chatType, target)
 end
 
 local function scheduleRandom()
@@ -156,6 +179,19 @@ local function createLinesEditor()
   return panel
 end
 
+local function emoteOptions()
+  local container = Settings.CreateControlTextContainer()
+  for _, choice in ipairs(emoteChoices) do
+    container:Add(choice.token, choice.label)
+  end
+  return container:GetData()
+end
+
+local function emoteDropdown(variable, key, default)
+  local setting = Settings.RegisterAddOnSetting(category, variable, key, ComradeDB.emotes, Settings.VarType.String, "Built-in emote", default)
+  Settings.CreateDropdown(category, setting, emoteOptions, "Animated emote played together with the message")
+end
+
 local function registerSettings()
   local layout
   category, layout = Settings.RegisterVerticalLayoutCategory("Comrade")
@@ -164,11 +200,16 @@ local function registerSettings()
 
   layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Triggers"))
   checkbox("Comrade_LevelUp", ComradeDB.triggers, "levelUp", "Level up", true, "Emote when you level up")
+  emoteDropdown("Comrade_LevelUpEmote", "levelUp", "FLEX")
   checkbox("Comrade_Trade", ComradeDB.triggers, "trade", "Trade", true, "Whisper your trade partner when a trade opens")
+  emoteDropdown("Comrade_TradeEmote", "trade", "BOW")
   checkbox("Comrade_Group", ComradeDB.triggers, "group", "Group", true, "Greet the party or raid when you join")
+  emoteDropdown("Comrade_GroupEmote", "group", "SALUTE")
   checkbox("Comrade_Money", ComradeDB.triggers, "money", "Money", true, "Emote when you gain a lot of money at once")
+  emoteDropdown("Comrade_MoneyEmote", "money", "SHY")
   slider("Comrade_MoneyThreshold", "moneyThreshold", "Money threshold", 100, 5, 500, 5, coins, "How much money counts as a lot")
   checkbox("Comrade_Random", ComradeDB.triggers, "random", "Random", true, "Emote now and then, out of combat")
+  emoteDropdown("Comrade_RandomEmote", "random", "ROAR")
   slider("Comrade_RandomMin", "randomMin", "Random at least every", 15, 1, 120, 1, minutes, "Shortest wait between random emotes")
   slider("Comrade_RandomMax", "randomMax", "Random at most every", 30, 1, 120, 1, minutes, "Longest wait between random emotes")
 
@@ -182,6 +223,7 @@ local events = {
     ComradeDB = ComradeDB or {}
     ComradeDB.triggers = ComradeDB.triggers or {}
     ComradeDB.lines = ComradeDB.lines or {}
+    ComradeDB.emotes = ComradeDB.emotes or {}
     registerSettings()
   end,
   PLAYER_LOGIN = function()
@@ -227,8 +269,7 @@ local commands = {
     say("The revolution is on hold.")
   end,
   now = function()
-    local line = pick("random")
-    if line then C_ChatInfo.SendChatMessage(line, "EMOTE") end
+    perform("random", "EMOTE")
   end,
 }
 

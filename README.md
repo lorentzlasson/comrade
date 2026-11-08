@@ -16,7 +16,7 @@ Copy this folder into `World of Warcraft/_forever_/Interface/AddOns/Comrade` and
 | You gain a gold or more at once | emote | *Calf Marx accepts the gold on behalf of the people.* |
 | Every 15 to 30 minutes, out of combat | emote | *Calf Marx hums The Internationale.* |
 
-Each trigger fires at most once every five minutes. Every trigger, the cooldown, the money threshold and the random interval can be changed under Options → AddOns → Comrade. The messages themselves are edited under Comrade → Lines, one per line, with a reset back to the defaults.
+Each trigger also plays an animated built-in emote: flex on level up, bow on trade, salute on joining a group, shy on money and roar for random. Each trigger fires at most once every five minutes. Every trigger, the cooldown, the money threshold and the random interval can be changed under Options → AddOns → Comrade. The messages themselves are edited under Comrade → Lines, one per line, with a reset back to the defaults.
 
 ## Commands
 
