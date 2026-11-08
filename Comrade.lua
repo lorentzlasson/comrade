@@ -81,6 +81,7 @@ local emoteChoices = {
   { token = "FLEX", label = "Flex" },
   { token = "KNEEL", label = "Kneel" },
   { token = "LAUGH", label = "Laugh" },
+  { token = "MOO", label = "Moo" },
   { token = "POINT", label = "Point" },
   { token = "ROAR", label = "Roar" },
   { token = "RUDE", label = "Rude" },
