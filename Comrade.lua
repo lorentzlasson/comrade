@@ -81,6 +81,7 @@ sendButton:SetSize(220, 24)
 sendButton:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", 0, 28)
 sendButton:RegisterForClicks("AnyUp")
 sendButton:SetAttribute("type", "macro")
+sendButton:SetAttribute("useOnKeyDown", false)
 sendButton:Hide()
 
 local function showPending()
