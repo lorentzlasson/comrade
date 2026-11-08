@@ -1,6 +1,6 @@
-local cooldown = 300
 local lastFired = {}
 local lastMoney
+local category
 
 local lines = {
   levelUp = {
@@ -42,24 +42,67 @@ local function pick(list)
 end
 
 local function send(trigger, chatType, target)
-  if not ComradeDB.enabled then return end
+  if not ComradeDB.enabled or not ComradeDB.triggers[trigger] then return end
   local now = GetTime()
-  if lastFired[trigger] and now - lastFired[trigger] < cooldown then return end
+  if lastFired[trigger] and now - lastFired[trigger] < ComradeDB.cooldown * 60 then return end
   lastFired[trigger] = now
   C_ChatInfo.SendChatMessage(pick(lines[trigger]), chatType, nil, target)
 end
 
 local function scheduleRandom()
-  C_Timer.After(math.random(900, 1800), function()
+  local low = math.min(ComradeDB.randomMin, ComradeDB.randomMax)
+  local high = math.max(ComradeDB.randomMin, ComradeDB.randomMax)
+  C_Timer.After(math.random(low * 60, high * 60), function()
     if not InCombatLockdown() then send("random", "EMOTE") end
     scheduleRandom()
   end)
 end
 
+local function minutes(value)
+  return value .. " min"
+end
+
+local function coins(value)
+  return C_CurrencyInfo.GetCoinTextureString(value * 100)
+end
+
+local function checkbox(variable, tbl, key, name, default, tooltip)
+  local setting = Settings.RegisterAddOnSetting(category, variable, key, tbl, Settings.VarType.Boolean, name, default)
+  Settings.CreateCheckbox(category, setting, tooltip)
+end
+
+local function slider(variable, key, name, default, min, max, step, formatter, tooltip)
+  local setting = Settings.RegisterAddOnSetting(category, variable, key, ComradeDB, Settings.VarType.Number, name, default)
+  local options = Settings.CreateSliderOptions(min, max, step)
+  options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, formatter)
+  Settings.CreateSlider(category, setting, options, tooltip)
+end
+
+local function registerSettings()
+  local layout
+  category, layout = Settings.RegisterVerticalLayoutCategory("Comrade")
+  checkbox("Comrade_Enabled", ComradeDB, "enabled", "Enabled", true, "Send anything at all")
+  slider("Comrade_Cooldown", "cooldown", "Cooldown", 5, 1, 60, 1, minutes, "Least time between two messages from the same trigger")
+
+  layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Triggers"))
+  checkbox("Comrade_LevelUp", ComradeDB.triggers, "levelUp", "Level up", true, "Emote when you level up")
+  checkbox("Comrade_Trade", ComradeDB.triggers, "trade", "Trade", true, "Whisper your trade partner when a trade opens")
+  checkbox("Comrade_Group", ComradeDB.triggers, "group", "Group", true, "Greet the party or raid when you join")
+  checkbox("Comrade_Money", ComradeDB.triggers, "money", "Money", true, "Emote when you gain a lot of money at once")
+  slider("Comrade_MoneyThreshold", "moneyThreshold", "Money threshold", 100, 5, 500, 5, coins, "How much money counts as a lot")
+  checkbox("Comrade_Random", ComradeDB.triggers, "random", "Random", true, "Emote now and then, out of combat")
+  slider("Comrade_RandomMin", "randomMin", "Random at least every", 15, 1, 120, 1, minutes, "Shortest wait between random emotes")
+  slider("Comrade_RandomMax", "randomMax", "Random at most every", 30, 1, 120, 1, minutes, "Longest wait between random emotes")
+
+  Settings.RegisterAddOnCategory(category)
+end
+
 local events = {
   ADDON_LOADED = function(name)
     if name ~= "Comrade" then return end
-    ComradeDB = ComradeDB or { enabled = true }
+    ComradeDB = ComradeDB or {}
+    ComradeDB.triggers = ComradeDB.triggers or {}
+    registerSettings()
   end,
   PLAYER_LOGIN = function()
     lastMoney = GetMoney()
@@ -78,7 +121,7 @@ local events = {
   end,
   PLAYER_MONEY = function()
     local money = GetMoney()
-    if money - lastMoney >= 10000 then send("money", "EMOTE") end
+    if money - lastMoney >= ComradeDB.moneyThreshold * 100 then send("money", "EMOTE") end
     lastMoney = money
   end,
 }
@@ -92,6 +135,9 @@ listener:SetScript("OnEvent", function(_, event, ...)
 end)
 
 local commands = {
+  [""] = function()
+    Settings.OpenToCategory(category:GetID())
+  end,
   on = function()
     ComradeDB.enabled = true
     say("The revolution continues.")
@@ -111,6 +157,6 @@ SlashCmdList.COMRADE = function(input)
   if command then
     command()
   else
-    say((ComradeDB.enabled and "on" or "off") .. "  |  /comrade on  |  /comrade off  |  /comrade now")
+    say((ComradeDB.enabled and "on" or "off") .. "  |  /comrade  |  /comrade on  |  /comrade off  |  /comrade now")
   end
 end
