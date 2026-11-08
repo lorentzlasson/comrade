@@ -76,28 +76,33 @@ local function pick(trigger)
   return list[math.random(#list)]
 end
 
+local sendButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
+sendButton:SetSize(220, 24)
+sendButton:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", 0, 28)
+sendButton:Hide()
+
 local function flushEmote()
   if not pendingEmote then return end
   local line = pendingEmote
   pendingEmote = nil
+  sendButton:Hide()
   C_ChatInfo.SendChatMessage(line, "EMOTE")
 end
 
-local inputFunctions = {
-  "MoveForwardStart",
-  "MoveBackwardStart",
-  "StrafeLeftStart",
-  "StrafeRightStart",
-  "TurnLeftStart",
-  "TurnRightStart",
-  "JumpOrAscendStart",
-  "CameraOrSelectOrMoveStart",
-  "TurnOrActionStart",
-}
-
-for _, name in ipairs(inputFunctions) do
-  hooksecurefunc(name, flushEmote)
+local function queueEmote(line)
+  pendingEmote = line
+  sendButton:SetText("Comrade: " .. line)
+  sendButton:Show()
 end
+
+sendButton:SetScript("OnClick", flushEmote)
+sendButton:SetScript("OnEnter", function(self)
+  GameTooltip:SetOwner(self, "ANCHOR_TOP")
+  GameTooltip:SetText("Click to emote")
+  GameTooltip:AddLine(pendingEmote, 1, 1, 1, true)
+  GameTooltip:Show()
+end)
+sendButton:SetScript("OnLeave", GameTooltip_Hide)
 
 local function perform(trigger, chatType, target)
   local emote = ComradeDB.emotes[trigger]
@@ -105,7 +110,7 @@ local function perform(trigger, chatType, target)
   if emote ~= "" then C_ChatInfo.PerformEmote(emote) end
   if not line then return end
   if chatType == "EMOTE" then
-    pendingEmote = line
+    queueEmote(line)
   else
     C_ChatInfo.SendChatMessage(line, chatType, nil, target)
   end
