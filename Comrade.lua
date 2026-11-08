@@ -113,10 +113,9 @@ local function armPending()
   if InCombatLockdown() then return end
   disarm()
   if not pendingEmote then return end
-  local press = GetCVarBool("ActionButtonUseKeyDown") and " LeftButton true" or ""
   for _, button in ipairs(actionButtons()) do
     local name = button:GetName()
-    sendButton:SetAttribute("*macrotext-" .. name, "/e " .. pendingEmote .. "\n/click " .. name .. press)
+    sendButton:SetAttribute("*macrotext-" .. name, "/e " .. pendingEmote .. "\n/click " .. name)
     for _, key in ipairs({ GetBindingKey(button.commandName) }) do
       SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton", name)
     end
