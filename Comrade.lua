@@ -1,5 +1,6 @@
 local lastFired = {}
 local lastMoney
+local pendingEmote
 local category
 
 local defaultLines = {
@@ -75,11 +76,39 @@ local function pick(trigger)
   return list[math.random(#list)]
 end
 
+local function flushEmote()
+  if not pendingEmote then return end
+  local line = pendingEmote
+  pendingEmote = nil
+  C_ChatInfo.SendChatMessage(line, "EMOTE")
+end
+
+local inputFunctions = {
+  "MoveForwardStart",
+  "MoveBackwardStart",
+  "StrafeLeftStart",
+  "StrafeRightStart",
+  "TurnLeftStart",
+  "TurnRightStart",
+  "JumpOrAscendStart",
+  "CameraOrSelectOrMoveStart",
+  "TurnOrActionStart",
+}
+
+for _, name in ipairs(inputFunctions) do
+  hooksecurefunc(name, flushEmote)
+end
+
 local function perform(trigger, chatType, target)
   local emote = ComradeDB.emotes[trigger]
   local line = pick(trigger)
   if emote ~= "" then C_ChatInfo.PerformEmote(emote) end
-  if line then C_ChatInfo.SendChatMessage(line, chatType, nil, target) end
+  if not line then return end
+  if chatType == "EMOTE" then
+    pendingEmote = line
+  else
+    C_ChatInfo.SendChatMessage(line, chatType, nil, target)
+  end
 end
 
 local function send(trigger, chatType, target)
@@ -94,7 +123,7 @@ local function scheduleRandom()
   local low = math.min(ComradeDB.randomMin, ComradeDB.randomMax)
   local high = math.max(ComradeDB.randomMin, ComradeDB.randomMax)
   C_Timer.After(math.random(low * 60, high * 60), function()
-    if not InCombatLockdown() then send("random", "EMOTE") end
+    if not InCombatLockdown() and not UnitIsAFK("player") then send("random", "EMOTE") end
     scheduleRandom()
   end)
 end
@@ -270,6 +299,7 @@ local commands = {
   end,
   now = function()
     perform("random", "EMOTE")
+    flushEmote()
   end,
 }
 
