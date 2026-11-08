@@ -78,7 +78,7 @@ end
 
 local sendButton = CreateFrame("Button", "ComradeSendButton", UIParent, "SecureActionButtonTemplate")
 sendButton:RegisterForClicks("AnyDown")
-sendButton:SetAttribute("type", "macro")
+sendButton:SetAttribute("*type*", "macro")
 sendButton:SetAttribute("useOnKeyDown", true)
 
 local indicator = CreateFrame("Frame", nil, UIParent)
@@ -95,22 +95,37 @@ indicatorText:SetPoint("LEFT", indicatorIcon, "RIGHT", 8, 0)
 indicatorText:SetWidth(ChatFrame1:GetWidth() - 36)
 indicatorText:SetJustifyH("LEFT")
 
+local function actionButtons()
+  local buttons = {}
+  for _, bar in ipairs({ MainActionBar, MultiBarBottomLeft, MultiBarBottomRight, MultiBarRight, MultiBarLeft, MultiBar5, MultiBar6, MultiBar7 }) do
+    for _, button in ipairs(bar.actionButtons) do
+      table.insert(buttons, button)
+    end
+  end
+  return buttons
+end
+
+local function disarm()
+  ClearOverrideBindings(sendButton)
+end
+
 local function armPending()
   if InCombatLockdown() then return end
-  ClearOverrideBindings(sendButton)
+  disarm()
   if not pendingEmote then return end
-  sendButton:SetAttribute("macrotext", "/e " .. pendingEmote)
-  for _, key in ipairs({ GetBindingKey("CAMERAZOOMIN") }) do
-    SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton")
-  end
-  for _, key in ipairs({ GetBindingKey("CAMERAZOOMOUT") }) do
-    SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton")
+  local press = GetCVarBool("ActionButtonUseKeyDown") and " LeftButton true" or ""
+  for _, button in ipairs(actionButtons()) do
+    local name = button:GetName()
+    sendButton:SetAttribute("*macrotext-" .. name, "/e " .. pendingEmote .. "\n/click " .. name .. press)
+    for _, key in ipairs({ GetBindingKey(button.commandName) }) do
+      SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton", name)
+    end
   end
 end
 
 local function queueEmote(line)
   pendingEmote = line
-  indicatorText:SetText("Scroll to emote: |cffffffff" .. line .. "|r")
+  indicatorText:SetText("Next ability sends: |cffffffff" .. line .. "|r")
   indicator:Show()
   armPending()
 end
@@ -285,6 +300,7 @@ local events = {
     lastMoney = GetMoney()
     scheduleRandom()
   end,
+  PLAYER_REGEN_DISABLED = disarm,
   PLAYER_REGEN_ENABLED = armPending,
   PLAYER_LEVEL_UP = function()
     send("levelUp", "EMOTE")
