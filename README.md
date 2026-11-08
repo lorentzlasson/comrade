@@ -11,7 +11,7 @@ Copy this folder into `World of Warcraft/_forever_/Interface/AddOns/Comrade` and
 | When | Where | Example |
 |---|---|---|
 | You level up | emote | *Calf Marx has seized more of the means of production.* |
-| A trade opens | whisper to your trade partner | Property is theft, comrade. But let's trade. |
+| A trade opens | whisper to your trade partner | Property is theft, comrade. Let this exchange be between equals, not owners. |
 | You join a group | party or raid | Workers of Azeroth, unite! |
 | You gain a gold or more at once | emote | *Calf Marx accepts the gold on behalf of the people.* |
 | Every 15 to 30 minutes, out of combat, not away | emote | *Calf Marx hums The Internationale.* |
