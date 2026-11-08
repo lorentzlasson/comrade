@@ -83,22 +83,17 @@ sendButton:SetAttribute("useOnKeyDown", true)
 
 local indicator = CreateFrame("Frame", nil, UIParent)
 indicator:SetSize(28, 28)
-indicator:SetPoint("BOTTOMRIGHT", ChatFrame1, "TOPRIGHT", 0, 28)
-indicator:EnableMouse(true)
+indicator:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", 0, 28)
 indicator:Hide()
 
 local indicatorIcon = indicator:CreateTexture(nil, "ARTWORK")
 indicatorIcon:SetAllPoints()
 indicatorIcon:SetTexture("Interface\\Icons\\INV_Hammer_01")
 
-indicator:SetScript("OnEnter", function(self)
-  GameTooltip:SetOwner(self, "ANCHOR_TOP")
-  GameTooltip:SetText("Comrade emote waiting")
-  GameTooltip:AddLine(pendingEmote, 1, 1, 1, true)
-  GameTooltip:AddLine("Scroll the mouse wheel to send it.", 0.7, 0.7, 0.7, true)
-  GameTooltip:Show()
-end)
-indicator:SetScript("OnLeave", GameTooltip_Hide)
+local indicatorText = indicator:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+indicatorText:SetPoint("LEFT", indicatorIcon, "RIGHT", 8, 0)
+indicatorText:SetWidth(ChatFrame1:GetWidth() - 36)
+indicatorText:SetJustifyH("LEFT")
 
 local function armPending()
   if InCombatLockdown() then return end
@@ -115,6 +110,7 @@ end
 
 local function queueEmote(line)
   pendingEmote = line
+  indicatorText:SetText("Scroll to emote: |cffffffff" .. line .. "|r")
   indicator:Show()
   armPending()
 end
