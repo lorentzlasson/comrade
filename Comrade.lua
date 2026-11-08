@@ -2,7 +2,7 @@ local lastFired = {}
 local lastMoney
 local category
 
-local lines = {
+local defaultLines = {
   levelUp = {
     "has seized more of the means of production.",
     "levels up, but insists the credit belongs to the workers.",
@@ -37,7 +37,23 @@ local function say(msg)
   print("|cffcc0000Comrade|r: " .. msg)
 end
 
-local function pick(list)
+local emoteHint = "Emotes. Your name goes in front, so start each line with a verb."
+
+local editorTabs = {
+  { trigger = "levelUp", label = "Level up", hint = emoteHint },
+  { trigger = "trade", label = "Trade", hint = "Whispers to your trade partner." },
+  { trigger = "group", label = "Group", hint = "Sent to party or raid chat." },
+  { trigger = "money", label = "Money", hint = emoteHint },
+  { trigger = "random", label = "Random", hint = emoteHint },
+}
+
+local function linesFor(trigger)
+  return ComradeDB.lines[trigger] or defaultLines[trigger]
+end
+
+local function pick(trigger)
+  local list = linesFor(trigger)
+  if #list == 0 then return end
   return list[math.random(#list)]
 end
 
@@ -45,8 +61,10 @@ local function send(trigger, chatType, target)
   if not ComradeDB.enabled or not ComradeDB.triggers[trigger] then return end
   local now = GetTime()
   if lastFired[trigger] and now - lastFired[trigger] < ComradeDB.cooldown * 60 then return end
+  local line = pick(trigger)
+  if not line then return end
   lastFired[trigger] = now
-  C_ChatInfo.SendChatMessage(pick(lines[trigger]), chatType, nil, target)
+  C_ChatInfo.SendChatMessage(line, chatType, nil, target)
 end
 
 local function scheduleRandom()
@@ -78,6 +96,66 @@ local function slider(variable, key, name, default, min, max, step, formatter, t
   Settings.CreateSlider(category, setting, options, tooltip)
 end
 
+local function createLinesEditor()
+  local panel = CreateFrame("Frame")
+  local selected = editorTabs[1].trigger
+  local tabButtons = {}
+
+  local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  title:SetPoint("TOPLEFT", 16, -16)
+  title:SetText("Comrade lines")
+
+  local hint = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  hint:SetPoint("TOPLEFT", 16, -84)
+
+  local scroll = CreateFrame("ScrollFrame", nil, panel, "InputScrollFrameTemplate")
+  scroll:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 6, -12)
+  scroll:SetSize(560, 240)
+  scroll.EditBox:SetWidth(542)
+  scroll.EditBox:SetFontObject("ChatFontNormal")
+  scroll.CharCount:Hide()
+
+  local function show(trigger)
+    selected = trigger
+    for _, tab in ipairs(editorTabs) do
+      tabButtons[tab.trigger]:SetEnabled(tab.trigger ~= trigger)
+      if tab.trigger == trigger then hint:SetText(tab.hint .. " One message per line.") end
+    end
+    scroll.EditBox:SetText(table.concat(linesFor(trigger), "\n"))
+  end
+
+  for i, tab in ipairs(editorTabs) do
+    local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    button:SetSize(100, 22)
+    button:SetPoint("TOPLEFT", 16 + (i - 1) * 104, -48)
+    button:SetText(tab.label)
+    button:SetScript("OnClick", function() show(tab.trigger) end)
+    tabButtons[tab.trigger] = button
+  end
+
+  scroll.EditBox:HookScript("OnTextChanged", function(self, userInput)
+    if not userInput then return end
+    local parsed = {}
+    for line in self:GetText():gmatch("[^\n]+") do
+      local trimmed = strtrim(line)
+      if trimmed ~= "" then table.insert(parsed, trimmed) end
+    end
+    ComradeDB.lines[selected] = parsed
+  end)
+
+  local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  reset:SetSize(140, 22)
+  reset:SetPoint("TOPLEFT", scroll, "BOTTOMLEFT", -6, -12)
+  reset:SetText("Reset to default")
+  reset:SetScript("OnClick", function()
+    ComradeDB.lines[selected] = nil
+    show(selected)
+  end)
+
+  panel:SetScript("OnShow", function() show(selected) end)
+  return panel
+end
+
 local function registerSettings()
   local layout
   category, layout = Settings.RegisterVerticalLayoutCategory("Comrade")
@@ -94,6 +172,7 @@ local function registerSettings()
   slider("Comrade_RandomMin", "randomMin", "Random at least every", 15, 1, 120, 1, minutes, "Shortest wait between random emotes")
   slider("Comrade_RandomMax", "randomMax", "Random at most every", 30, 1, 120, 1, minutes, "Longest wait between random emotes")
 
+  Settings.RegisterCanvasLayoutSubcategory(category, createLinesEditor(), "Lines")
   Settings.RegisterAddOnCategory(category)
 end
 
@@ -102,6 +181,7 @@ local events = {
     if name ~= "Comrade" then return end
     ComradeDB = ComradeDB or {}
     ComradeDB.triggers = ComradeDB.triggers or {}
+    ComradeDB.lines = ComradeDB.lines or {}
     registerSettings()
   end,
   PLAYER_LOGIN = function()
@@ -147,7 +227,8 @@ local commands = {
     say("The revolution is on hold.")
   end,
   now = function()
-    C_ChatInfo.SendChatMessage(pick(lines.random), "EMOTE")
+    local line = pick("random")
+    if line then C_ChatInfo.SendChatMessage(line, "EMOTE") end
   end,
 }
 
