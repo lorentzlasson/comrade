@@ -76,41 +76,30 @@ local function pick(trigger)
   return list[math.random(#list)]
 end
 
-local sendButton = CreateFrame("Button", "ComradeSendButton", UIParent, "SecureActionButtonTemplate,UIPanelButtonTemplate")
-sendButton:SetSize(220, 24)
-sendButton:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", 0, 28)
-sendButton:RegisterForClicks("AnyUp")
+local sendButton = CreateFrame("Button", "ComradeSendButton", UIParent, "SecureActionButtonTemplate")
+sendButton:RegisterForClicks("AnyDown")
 sendButton:SetAttribute("type", "macro")
-sendButton:SetAttribute("useOnKeyDown", false)
-sendButton:Hide()
+sendButton:SetAttribute("useOnKeyDown", true)
 
-local function showPending()
+local function armPending()
   if InCombatLockdown() then return end
-  if pendingEmote then
-    sendButton:SetAttribute("macrotext", "/e " .. pendingEmote)
-    sendButton:SetText("Comrade: " .. pendingEmote)
-    sendButton:Show()
-  else
-    sendButton:Hide()
+  ClearOverrideBindings(sendButton)
+  if not pendingEmote then return end
+  sendButton:SetAttribute("macrotext", "/e " .. pendingEmote)
+  for _, key in ipairs({ GetBindingKey("MOVEFORWARD") }) do
+    SetOverrideBindingClick(sendButton, true, key, "ComradeSendButton")
   end
 end
 
 local function queueEmote(line)
   pendingEmote = line
-  showPending()
+  armPending()
 end
 
 sendButton:SetScript("PostClick", function()
   pendingEmote = nil
-  showPending()
+  armPending()
 end)
-sendButton:SetScript("OnEnter", function(self)
-  GameTooltip:SetOwner(self, "ANCHOR_TOP")
-  GameTooltip:SetText("Click to emote")
-  GameTooltip:AddLine(pendingEmote, 1, 1, 1, true)
-  GameTooltip:Show()
-end)
-sendButton:SetScript("OnLeave", GameTooltip_Hide)
 
 local function perform(trigger, chatType, target)
   local emote = ComradeDB.emotes[trigger]
@@ -272,7 +261,7 @@ local events = {
     lastMoney = GetMoney()
     scheduleRandom()
   end,
-  PLAYER_REGEN_ENABLED = showPending,
+  PLAYER_REGEN_ENABLED = armPending,
   PLAYER_LEVEL_UP = function()
     send("levelUp", "EMOTE")
   end,
