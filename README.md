@@ -22,11 +22,11 @@ Copy this folder into `World of Warcraft/_forever_/Interface/AddOns/Comrade` and
 |---|---|---|
 | You level up | emote | *Calf Marx has seized more of the means of production.* |
 | A trade opens | whisper to your trade partner | Property is theft, comrade. Let this exchange be between equals, not owners. |
-| You join a group | party or raid | Workers of Azeroth, unite! |
+| Someone else is in your group | party or raid | Workers of Azeroth, unite! |
 | You gain a gold or more at once | emote | *Calf Marx accepts the gold on behalf of the people.* |
 | Every 15 to 30 minutes, out of combat, not away | emote | *Calf Marx hums The Internationale.* |
 
-Each trigger also plays an animated built-in emote: flex on level up, bow on trade, salute on joining a group and shy on money. Random emotes have none by default. Outside dungeons the game only sends a custom emote from your own key press. So a waiting line shows above the chat with a hammer icon, and goes out with your next action bar key press out of combat. That press still uses your ability as normal. Built-in emotes still play on their own. Random emotes pause while you are away. Each trigger fires at most once every five minutes. Every trigger, the cooldown, the money threshold and the random interval can be changed under Options → AddOns → Comrade. The messages themselves are edited under Comrade → Lines, one per line, with a reset back to the defaults.
+Each trigger also plays an animated built-in emote: flex on level up, bow on trade, salute once someone else is in your group and shy on money. Random emotes have none by default. Outside dungeons the game only sends a custom emote from your own key press. So a waiting line shows above the chat with a hammer icon, and goes out with your next action bar key press out of combat. That press still uses your ability as normal. Built-in emotes still play on their own. Random emotes pause while you are away. Each trigger fires at most once every five minutes. Every trigger, the cooldown, the money threshold and the random interval can be changed under Options → AddOns → Comrade. The messages themselves are edited under Comrade → Lines, one per line, with a reset back to the defaults.
 
 ## ★ Commands
 

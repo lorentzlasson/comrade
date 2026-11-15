@@ -1,5 +1,6 @@
 local lastFired = {}
 local lastMoney
+local greeted = true
 local pendingEmote
 local category
 
@@ -329,7 +330,7 @@ local function registerSettings()
   emoteDropdown("Comrade_LevelUpEmote", "levelUp", "FLEX")
   checkbox("Comrade_Trade", ComradeDB.triggers, "trade", "Trade", true, "Whisper your trade partner when a trade opens")
   emoteDropdown("Comrade_TradeEmote", "trade", "BOW")
-  checkbox("Comrade_Group", ComradeDB.triggers, "group", "Group", true, "Greet the party or raid when you join")
+  checkbox("Comrade_Group", ComradeDB.triggers, "group", "Group", true, "Greet the party or raid once someone else is in it")
   emoteDropdown("Comrade_GroupEmote", "group", "SALUTE")
   checkbox("Comrade_Money", ComradeDB.triggers, "money", "Money", true, "Emote when you gain a lot of money at once")
   emoteDropdown("Comrade_MoneyEmote", "money", "SHY")
@@ -358,6 +359,7 @@ local events = {
   end,
   PLAYER_LOGIN = function()
     lastMoney = GetMoney()
+    greeted = GetNumGroupMembers() > 1
     scheduleRandom()
   end,
   PLAYER_REGEN_DISABLED = disarm,
@@ -368,10 +370,15 @@ local events = {
   TRADE_SHOW = function()
     send("trade", "WHISPER", GetUnitName("NPC", true))
   end,
-  GROUP_JOINED = function()
+  GROUP_ROSTER_UPDATE = function()
+    if greeted or GetNumGroupMembers() < 2 then return end
+    greeted = true
     C_Timer.After(2, function()
       if IsInGroup(LE_PARTY_CATEGORY_HOME) then send("group", IsInRaid() and "RAID" or "PARTY") end
     end)
+  end,
+  GROUP_LEFT = function()
+    greeted = false
   end,
   PLAYER_MONEY = function()
     local money = GetMoney()
